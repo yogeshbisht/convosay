@@ -1,12 +1,16 @@
-import { useState } from "react";
+import React from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { FaGithub } from "react-icons/fa6";
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 
-const ProviderAuth = () => {
+interface ProviderAuthProps {
+  pending: boolean;
+  setPending: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const ProviderAuth = ({ pending, setPending }: ProviderAuthProps) => {
   const { signIn } = useAuthActions();
-  const [pending, setPending] = useState(false);
 
   const onProviderSignin = (value: "github" | "google") => {
     setPending(true);
@@ -18,7 +22,7 @@ const ProviderAuth = () => {
       <Button
         variant="outline"
         onClick={() => onProviderSignin("google")}
-        disabled={false}
+        disabled={pending}
         size="lg"
         className="w-full relative"
       >
@@ -28,7 +32,7 @@ const ProviderAuth = () => {
       <Button
         variant="outline"
         onClick={() => onProviderSignin("github")}
-        disabled={false}
+        disabled={pending}
         size="lg"
         className="w-full relative"
       >

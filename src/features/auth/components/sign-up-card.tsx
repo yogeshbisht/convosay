@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { TriangleAlert } from "lucide-react";
 import { SignInFlow } from "../types";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +19,29 @@ interface SignUpCardProps {
 }
 
 const SignUpCard = ({ setState }: SignUpCardProps) => {
+  const { signIn } = useAuthActions();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onPasswordSignUp = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setPending(true);
+    signIn("password", { email, password, flow: "signUp" })
+      .catch(() => {
+        setError("An error occurred");
+      })
+      .finally(() => setPending(false));
+  };
 
   return (
     <Card className="size-full p-8">
@@ -29,10 +51,16 @@ const SignUpCard = ({ setState }: SignUpCardProps) => {
           Use Your Email or Another Service to Continue
         </CardDescription>
       </CardHeader>
+      {!!error && (
+        <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-destructive text-sm mb-6">
+          <TriangleAlert className="size-4" />
+          <p>{error}</p>
+        </div>
+      )}
       <CardContent className="space-y-5 px-0 pb-0">
-        <form className="space-y-2.5">
+        <form onSubmit={onPasswordSignUp} className="space-y-2.5">
           <Input
-            disabled={false}
+            disabled={pending}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
@@ -40,7 +68,7 @@ const SignUpCard = ({ setState }: SignUpCardProps) => {
             required
           />
           <Input
-            disabled={false}
+            disabled={pending}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
@@ -48,7 +76,7 @@ const SignUpCard = ({ setState }: SignUpCardProps) => {
             required
           />
           <Input
-            disabled={false}
+            disabled={pending}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm password"
@@ -59,13 +87,13 @@ const SignUpCard = ({ setState }: SignUpCardProps) => {
             type="submit"
             className="w-full relative"
             size="lg"
-            disabled={false}
+            disabled={pending}
           >
             Continue
           </Button>
         </form>
         <Separator />
-        <ProviderAuth />
+        <ProviderAuth pending={pending} setPending={setPending} />
         <p className="text-xs text-muted-foreground">
           Already have an account?{" "}
           <span
